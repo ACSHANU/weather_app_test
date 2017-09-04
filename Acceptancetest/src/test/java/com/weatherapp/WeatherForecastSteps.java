@@ -11,10 +11,11 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import com.weatherapp.CommonObjectRepository;
 
 import java.util.ArrayList;
 
-public class WeatherForecastSteps extends CommonObjectRepository {
+public class WeatherForecastSteps {
 
 	static WebDriver driver = null;
 	static WebDriverWait wait = null;
@@ -32,12 +33,14 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 	@When("^User clicks on  \"([^\"]*)\"$")
 	public void User_clicks_on(String day) throws Throwable {
 
-		String index = getRowIndexOfADay(day);
+		// Get the row index of day passed
+		String index = CommonObjectRepository.getRowIndexOfADay(day);
 		currentDaySelected = day;
 
 		String locator = "//span[@data-test='date-%1$s']";
 		locator = String.format(locator, index);
 
+		// wait for the element to be visible before click
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By
 				.xpath(locator)));
 		driver.findElement(By.xpath(locator)).click();
@@ -48,17 +51,20 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 	public void summaryOfAllHoursIsDisplayedOf(String selectedDay)
 			throws Throwable {
 
-		String[] arrValues = getExpectedHourValues(selectedDay);
+		// get all expected hours values for a day
+		String[] arrValues = CommonObjectRepository
+				.getExpectedHourValues(selectedDay);
 		currentDaySelected = selectedDay;
+
+		// get all actual hour values for a day by iterating through web
+		// elements
 		for (int i = 1; i <= arrValues.length; i++) {
-			String actualHourValue = getHourValueByRowIndex(selectedDay,
-					String.valueOf(i));
+			String actualHourValue = CommonObjectRepository
+					.getHourValueByRowIndex(selectedDay, String.valueOf(i));
 			String expeccteHourValue = arrValues[i - 1];
-			if (!actualHourValue.equals(expeccteHourValue)) {
+			// Throw error in case values don't match
+			if (!actualHourValue.equals(expeccteHourValue))
 				throw new Exception("Expected Hour : " + expeccteHourValue
-						+ " Actual Hour Displayed :" + actualHourValue);
-			} else
-				System.out.println("Expected Hour : " + expeccteHourValue
 						+ " Actual Hour Displayed :" + actualHourValue);
 
 		}
@@ -68,17 +74,16 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 	@Then("^Summary of all passed hours is hidden$")
 	public void summaryOfAllPassedHoursIsHidden() throws Throwable {
 
-		String[] arrValues = getExpectedHourValues(currentDaySelected);
+		String[] arrValues = CommonObjectRepository
+				.getExpectedHourValues(currentDaySelected);
 
 		for (int i = 1; i <= arrValues.length; i++) {
-			String actualHourValue = getHourValueByRowIndex(currentDaySelected,
-					String.valueOf(i));
+			String actualHourValue = CommonObjectRepository
+					.getHourValueByRowIndex(currentDaySelected,
+							String.valueOf(i));
 			String expeccteHourValue = arrValues[i - 1];
-			if (!actualHourValue.equals(expeccteHourValue)) {
+			if (!actualHourValue.equals(expeccteHourValue))
 				throw new Exception("Expected Hour : " + expeccteHourValue
-						+ " Actual Hour Displayed :" + actualHourValue);
-			} else
-				System.out.println("Expected Hour : " + expeccteHourValue
 						+ " Actual Hour Displayed :" + actualHourValue);
 
 		}
@@ -87,9 +92,10 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 	@And("^Group by (\\d+) hours$")
 	public void groupByHours(int groupby) throws Throwable {
 
-		String[] arrValues = getExpectedHourValues(currentDaySelected);
+		String[] arrValues = CommonObjectRepository
+				.getExpectedHourValues(currentDaySelected);
 		for (int i = 1; i <= arrValues.length - 1; i++) {
-
+			// check the hours displayed are three hours apart
 			if (Integer.parseInt(arrValues[i]) % 3 != 1)
 				throw new Exception("Not difference of 3 hours");
 		}
@@ -121,7 +127,7 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 		String locator = "//span[contains(@data-test,'date-')]";
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By
 				.xpath(locator)));
-
+		// check number of dates displayed
 		if (Integer.parseInt(intDays) != driver.findElements(By.xpath(locator))
 				.size())
 			throw new Exception("Number of Days displayed is :"
@@ -133,12 +139,15 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 
 		String locator = "//span[contains(@data-test,'date-')]";
 		ArrayList<String> vals = new ArrayList<String>();
+		// Store all dates displayed in an array from web elements
 		for (WebElement ele : driver.findElements(By.xpath(locator))) {
 			vals.add(ele.getText());
 		}
+		// check if the number of dates displayed is 5
 		if (vals.size() != 5)
 			throw new Exception("Number of dates displayed is not 5");
 
+		// Check the dates displayed in order
 		for (int i = 20; i < 25; i++) {
 
 			if (Integer.parseInt(vals.get(i - 20)) != i)
@@ -170,7 +179,7 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 	public void Hours_panel_of_should_be_displayed(String day) throws Throwable {
 
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By
-				.xpath(getHoursPanelLocator(day, true))));
+				.xpath(CommonObjectRepository.getHoursPanelLocator(day, true))));
 
 	}
 
@@ -178,26 +187,55 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 	public void Hours_panel_of_is_closed(String day) throws Throwable {
 
 		wait.until(ExpectedConditions.presenceOfElementLocated(By
-				.xpath(getHoursPanelLocator(day, false))));
+				.xpath(CommonObjectRepository.getHoursPanelLocator(day, false))));
 		Close_Browser();
 	}
 
 	@Then("^Max and min temperatures are displayed$")
 	public void Max_and_min_temperatures_are_displayed() throws Throwable {
 
-		String[] arrValues = getExpectedHourValues(currentDaySelected);
-		int actualCount = getNumberOfItemsWithMaxAdnMinTempsDisplayed(currentDaySelected);
-		if (actualCount != arrValues.length) {
-			throw new Exception(
-					"Number of items (Both Maximum & Mimimum Tempratures) displayed not matching with  3 hourly values , Expected : ");
-		}
+		String selectedRowIndex = CommonObjectRepository
+				.getRowIndexOfADay(currentDaySelected);
+		int expectedMaxTemmp = CommonObjectRepository
+				.getMaxTempValuesDisplayed(currentDaySelected);
+		int expectedMinTemp = CommonObjectRepository
+				.getMinTempValuesDisplayed(currentDaySelected);
+
+		String locator = "//span[@data-test='maximum-%1$s']";
+
+		int actualMaxTemp = Integer
+				.parseInt(driver
+						.findElement(
+								By.xpath(String.format(locator,
+										selectedRowIndex))).getText()
+						.replace("°", ""));
+		locator = "//span[@data-test='minimum-%1$s']";
+		int actualMinTemp = Integer
+				.parseInt(driver
+						.findElement(
+								By.xpath(String.format(locator,
+										selectedRowIndex))).getText()
+						.replace("°", ""));
+
+		System.out.println("expectedMaxTemmp :" + expectedMaxTemmp);
+		System.out.println("expectedMinTemp :" + expectedMinTemp);
+		System.out.println("actualMaxTemp :" + actualMaxTemp);
+		System.out.println("actualMinTemp :" + actualMinTemp);
+
+		if (expectedMaxTemmp != actualMaxTemp)
+			throw new Exception("Expected Max tempertires are not matching");
+		if (expectedMinTemp != actualMinTemp)
+			throw new Exception("Expected Min tempertires are not matching");
+
 	}
 
 	@Then("^Windspeed and directions are displayed$")
 	public void Windspeed_and_directions_are_displayed() throws Throwable {
 
-		String[] arrValues = getExpectedHourValues(currentDaySelected);
-		int actualCount = getNumberOfItemsWithWindSpeedAndDirection(currentDaySelected);
+		String[] arrValues = CommonObjectRepository
+				.getExpectedHourValues(currentDaySelected);
+		int actualCount = CommonObjectRepository
+				.getNumberOfItemsWithWindSpeedAndDirection(currentDaySelected);
 		if (actualCount != arrValues.length) {
 			throw new Exception(
 					"Number of items (Both Windspeed & Direction) displayed not matching with  3 hourly values , Expected : "
@@ -205,23 +243,32 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 		}
 	}
 
-	@Then("^Total rainfall and Pressure are displayed$")
+	@Then("^Aggregate rainfall is displayed$")
 	public void Total_rainfall_and_Pressure_are_displayed() throws Throwable {
+		String selectedRowIndex = CommonObjectRepository
+				.getRowIndexOfADay(currentDaySelected);
+		int expectedAgrRainfall = CommonObjectRepository
+				.getAggregateRainfallValuesDisplayed(currentDaySelected);
+		String locator = "//span[@data-test='rainfall-%1$s']";
+		int actualAgrRainfall = Integer
+				.parseInt(driver
+						.findElement(
+								By.xpath(String.format(locator,
+										selectedRowIndex))).getText()
+						.replace("mm", ""));
+		System.out.println("expectedAgrRainfall : " + expectedAgrRainfall);
+		System.out.println("actualAgrRainfall : " + actualAgrRainfall);
+		if (expectedAgrRainfall != actualAgrRainfall)
+			throw new Exception("Rainfalls are not matching");
 
-		String[] arrValues = getExpectedHourValues(currentDaySelected);
-		int actualCount = getNumberOfItemsWithRainfallAndPressure(currentDaySelected);
-		if (actualCount != arrValues.length) {
-			throw new Exception(
-					"Number of items (Both Rainfall & Pressure) displayed not matching with  3 hourly values , Expected : "
-							+ arrValues.length + " Actual : " + actualCount);
-		}
 	}
 
 	@Then("^All numeric values should be rounded down$")
 	public void All_numeric_values_should_be_rounded_down() throws Throwable {
 
-		String[] arrValues = getExpectedHourValues(currentDaySelected);
-		String[] maxAndMinTemp = getMaxAndMinTempValues(currentDaySelected);
+		String[] maxAndMinTemp = CommonObjectRepository
+				.getMaxAndMinTempValues(currentDaySelected);
+
 		for (int i = 0; i < maxAndMinTemp.length; i++) {
 			try {
 				Integer.parseInt(maxAndMinTemp[i]);
@@ -235,95 +282,14 @@ public class WeatherForecastSteps extends CommonObjectRepository {
 
 	}
 
-	public static String[] getMaxAndMinTempValues(String day) {
-
-		String locator = "//span[@data-test='maximum-%1$s-%2$s' or @data-test='minimum-%1$s-%2$s' or @data-test='speed-%1$s-%2$s' or @data-test='rainfall-%1$s-%2$s' or @data-test='pressure-%1$s-%2$s']";
-		String dayIndex = getRowIndexOfADay(day);
-		String[] arrHours = getExpectedHourValues(day);
-		ArrayList<String> tempValues = new ArrayList<String>();
-
-		for (int i = 1; i <= arrHours.length; i++) {
-			String loc = String.format(locator, dayIndex, String.valueOf(i));
-			int size = driver.findElements(By.xpath(loc)).size();
-
-			for (int j = 1; j <= size; j++) {
-				String value = driver.findElement(
-						By.xpath("(" + loc + ")[" + j + "]")).getText();
-				value = value.replace("°", "");
-				value = value.replace("kph", "");
-				value = value.replace("mm", "");
-				value = value.replace("mb", "");
-
-				tempValues.add(value);
-			}
-
-		}
-		return tempValues.toArray(new String[tempValues.size()]);
-	}
-
 	@Then("^Close Browser$")
 	public void Close_Browser() throws Throwable {
 
 		driver.close();
 	}
 
-	public static String getRowIndexOfADay(String day) {
-
-		String rowIndex = driver.findElement(
-				By.xpath(String.format("//span[text()='%1$s' and @data-test]",
-						day))).getAttribute("data-test");
-		rowIndex = rowIndex.split("-")[1];
-		return rowIndex;
+	public static WebDriver getDriverInstance() {
+		return driver;
 	}
 
-	private static String getHoursPanelLocator(String day, boolean isVisible) {
-		String dayRowIndex = getRowIndexOfADay(day);
-		String panelSize = "max-height: 2000px";
-		if (!isVisible)
-			panelSize = "max-height: 0px";
-
-		String locator = String
-				.format("//span[@data-test='day-%1$s']/../../../div[@class='details' and contains(@style,'%2$s')]",
-						dayRowIndex, panelSize);
-
-		return locator;
-	}
-
-	public static String getHourValueByRowIndex(String day, String hourRowIndex) {
-
-		String dayRowIndex = getRowIndexOfADay(day);
-		String locator = "//span[@data-test='hour-%1$s-%2$s']";
-		locator = String.format(locator, dayRowIndex, hourRowIndex);
-		return driver.findElement(By.xpath(locator)).getText();
-	}
-
-	public static int getNumberOfItemsWithWindSpeedAndDirection(String day) {
-
-		String index = getRowIndexOfADay(day);
-		String locator = "//span[@data-test='date-%1$s']/../../span[2]/../../div[2]/div/span[4]/span[contains(@data-test,'speed-%1$s-')]/../span[contains(@data-test,'direction-%1$s-')]";
-		locator = String.format(locator, index);
-
-		return driver.findElements(By.xpath(locator)).size();
-
-	}
-
-	public static int getNumberOfItemsWithMaxAdnMinTempsDisplayed(String day) {
-
-		String index = getRowIndexOfADay(day);
-		String locator = "//span[@data-test='date-%1$s']/../../span[2]/../../div[2]/div/span[3]/span[contains(@data-test,'maximum-%1$s-')]/../span[contains(@data-test,'minimum-%1$s-')]";
-		locator = String.format(locator, index);
-
-		return driver.findElements(By.xpath(locator)).size();
-
-	}
-
-	public static int getNumberOfItemsWithRainfallAndPressure(String day) {
-
-		String index = getRowIndexOfADay(day);
-		String locator = "//span[@data-test='date-%1$s']/../../span[2]/../../div[2]/div/span[5]/span[contains(@data-test,'rainfall-%1$s-')]/../span[contains(@data-test,'pressure-%1$s-')]";
-		locator = String.format(locator, index);
-
-		return driver.findElements(By.xpath(locator)).size();
-
-	}
 }

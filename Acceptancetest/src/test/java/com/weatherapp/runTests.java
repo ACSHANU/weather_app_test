@@ -3,12 +3,10 @@ package com.weatherapp;
 import cucumber.api.junit.Cucumber;
 import org.junit.runner.RunWith;
 
-
 @RunWith(Cucumber.class)
-@Cucumber.Options(
-        features = {"src/test/resources"},
-        glue = {"com.weatherapp"},
-        format = {"pretty", "html:target/Destination"}
+@Cucumber.Options(features = { "src/test/resources" }, glue = { "com.weatherapp" }, format = {
+		"pretty", "html:target/Report" }
 
 )
-public class runTests {}
+public class runTests {
+}
