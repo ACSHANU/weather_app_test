@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: Scenario: Format of values
+-------------------------------------------------------------------------------
+Tests run: 35, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 60.844 s - in Scenario: Format of values
